@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .btn {
+    @apply bg-[#f8f9fa] p-2 m-1 rounded ring-gray-200 text-sm text-gray-700 hover:ring-1 focus:outline-none active:ring-gray-300 hover:shadow-lg;
+  }
+}
