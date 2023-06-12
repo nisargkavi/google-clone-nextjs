@@ -2,33 +2,36 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useGlobalContext } from "@/app/context/appContext";
+import { API_KEY, CONTEXT_KEY } from "@/app/keys";
 import Footer from "@/app/components/Footer";
 import Header from "./components/Header";
 import SearchBar from "@/app/components/SearchBar";
 
+export const googleSearch = async (searchString) => {
+  const startIndex = 0;
+  const response = await fetch(`https://www.googleapis.com/customsearch/v1?key=${API_KEY}&cx=${CONTEXT_KEY}&q=${searchString}&start=${startIndex}`);
+  if (!response.ok && response.status != 200) {
+    throw new Error('Something went wrong!');
+  }
+  const data = await response.json();
+
+  return new Promise((resolve) => {
+    resolve(data);
+  });
+}
+
 export default function Home() {
   const router = useRouter();
-  const { searchTerm, setSearchResults,setResultsShown,windowSize } = useGlobalContext();
+  const { searchTerm, setSearchTerm,setSearchResults,setResultsShown,windowSize } = useGlobalContext();
   const handleSearch = async (e) => {
-    const API_KEY = "AIzaSyAjzK_9dM44dMZb9KF5OO_WuChv8mGOv1E";
-    const CONTEXT_KEY = "14f3672e8270449cf";
-    const startIndex = 0;
-    try {
-      const response = await fetch(`https://www.googleapis.com/customsearch/v1?key=${API_KEY}&cx=${CONTEXT_KEY}&q=${searchTerm}&start=${startIndex}`);
-      if (response.ok && response.status === 200) {
-        const data = await response.json();
-        setSearchResults(data);
-        setResultsShown(true);
-        router.push(`/search/${searchTerm}`);
-      } else {
-        console.error('Request failed with status:', response.status);
-      }
-    } catch (error) {
-      console.error('An error occurred:', error);
-    }
-  };
+    const data = await googleSearch(searchTerm);
+    setSearchResults(data);
+    setResultsShown(true);
+    router.push(`/search/${searchTerm}`);
+  }
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
+      setSearchTerm(event.target.value);
       handleSearch(event.target.value);
     }
   }

@@ -1,33 +1,33 @@
 "use client";
 import React, { useEffect } from "react";
 import Footer from "@/app/components/Footer";
+import { useGlobalContext } from "@/app/context/appContext";
+import { API_KEY, CONTEXT_KEY } from "@/app/keys";
 import SearchHeader from "@/app/components/SearchHeader"
 import SearchResults from "@/app/components/SearchResults";
-import { useGlobalContext } from "@/app/context/appContext";
 
+export const googleSearch = async (searchString) => {
+  const startIndex = 0;
+  const response = await fetch(`https://www.googleapis.com/customsearch/v1?key=${API_KEY}&cx=${CONTEXT_KEY}&q=${searchString}&start=${startIndex}`);
+  if (!response.ok && response.status != 200) {
+    throw new Error('Something went wrong!');
+  }
+  const data = await response.json();
 
-const search = function({ params }) {
+  return new Promise((resolve) => {
+    resolve(data);
+  });
+}
+
+const Search = ({ params }) => {
   const { setSearchTerm, setSearchResults, searchResults,resultsShown,setResultsShown,windowSize } = useGlobalContext();
-  const handleSearch = async (searchSlug) => {
-    const API_KEY = "AIzaSyAjzK_9dM44dMZb9KF5OO_WuChv8mGOv1E";
-    const CONTEXT_KEY = "14f3672e8270449cf";
-    const startIndex = 0;
-
-    try {
-      const response = await fetch(`https://www.googleapis.com/customsearch/v1?key=${API_KEY}&cx=${CONTEXT_KEY}&q=${searchSlug}&start=${startIndex}`);
-      if (response.ok && response.status === 200) {
-        const data = await response.json();
-        setSearchResults(data);
-        setResultsShown(true);
-        document.title = `${decodeURIComponent(searchSlug)} - Google Search`;
-        history.pushState({}, null, window.location.href.split("/")[0] + "/search/" + searchSlug);
-      } else {
-        console.error('Request failed with status:', response.status);
-      }
-    } catch (error) {
-      console.error('An error occurred:', error);
-    }
-  };
+  const handleSearch = async (searchString) => {
+    const data = await googleSearch(searchString);
+    setSearchResults(data);
+    setResultsShown(true);
+    document.title = `${decodeURIComponent(searchString)} - Google Search`;
+    history.pushState({}, null, "/search/" + searchString);
+  }
   useEffect(() => {
     if (searchResults === null) {
       handleSearch(params.slug);
@@ -37,6 +37,7 @@ const search = function({ params }) {
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
+      setSearchTerm(event.target.value);
       handleSearch(event.target.value);
     }
   }
@@ -57,4 +58,4 @@ const search = function({ params }) {
   )
 }
 
-export default search
+export default Search;
